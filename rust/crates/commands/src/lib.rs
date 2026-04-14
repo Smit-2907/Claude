@@ -2843,12 +2843,13 @@ fn default_skill_install_root() -> std::io::Result<PathBuf> {
     if let Ok(codex_home) = env::var("CODEX_HOME") {
         return Ok(PathBuf::from(codex_home).join("skills"));
     }
-    if let Some(home) = env::var_os("HOME") {
+    let home = env::var_os("HOME").or_else(|| env::var_os("USERPROFILE"));
+    if let Some(home) = home {
         return Ok(PathBuf::from(home).join(".claw").join("skills"));
     }
     Err(std::io::Error::new(
         std::io::ErrorKind::NotFound,
-        "unable to resolve a skills install root; set CLAW_CONFIG_HOME or HOME",
+        "unable to resolve a skills install root; set CLAW_CONFIG_HOME, HOME, or USERPROFILE",
     ))
 }
 

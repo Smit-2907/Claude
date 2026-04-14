@@ -33,6 +33,7 @@ pub enum ProviderKind {
     Anthropic,
     Xai,
     OpenAi,
+    Gemini,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -122,6 +123,24 @@ const MODEL_REGISTRY: &[(&str, ProviderMetadata)] = &[
             default_base_url: openai_compat::DEFAULT_XAI_BASE_URL,
         },
     ),
+    (
+        "gemini",
+        ProviderMetadata {
+            provider: ProviderKind::Gemini,
+            auth_env: "GEMINI_API_KEY",
+            base_url_env: "GEMINI_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_GEMINI_BASE_URL,
+        },
+    ),
+    (
+        "gemini-flash-2",
+        ProviderMetadata {
+            provider: ProviderKind::Gemini,
+            auth_env: "GEMINI_API_KEY",
+            base_url_env: "GEMINI_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_GEMINI_BASE_URL,
+        },
+    ),
 ];
 
 #[must_use]
@@ -142,6 +161,11 @@ pub fn resolve_model_alias(model: &str) -> String {
                     "grok" | "grok-3" => "grok-3",
                     "grok-mini" | "grok-3-mini" => "grok-3-mini",
                     "grok-2" => "grok-2",
+                    _ => trimmed,
+                },
+                ProviderKind::Gemini => match *alias {
+                    "gemini" | "gemini-flash" => "gemini-1.5-flash",
+                    "gemini-flash-2" => "gemini-2.0-flash",
                     _ => trimmed,
                 },
                 ProviderKind::OpenAi => trimmed,
@@ -169,16 +193,31 @@ pub fn metadata_for_model(model: &str) -> Option<ProviderMetadata> {
             default_base_url: openai_compat::DEFAULT_XAI_BASE_URL,
         });
     }
+    if canonical.starts_with("gemini") {
+        return Some(ProviderMetadata {
+            provider: ProviderKind::Gemini,
+            auth_env: "GEMINI_API_KEY",
+            base_url_env: "GEMINI_BASE_URL",
+            default_base_url: openai_compat::DEFAULT_GEMINI_BASE_URL,
+        });
+    }
     None
 }
 
 #[must_use]
 pub fn detect_provider_kind(model: &str) -> ProviderKind {
+    let canonical = resolve_model_alias(model);
+    if canonical.starts_with("gemini") {
+        return ProviderKind::Gemini;
+    }
     if let Some(metadata) = metadata_for_model(model) {
         return metadata.provider;
     }
-    if anthropic::has_auth_from_env_or_saved().unwrap_or(false) {
+    if anthropic::has_auth_from_env_or_saved().unwrap_or(false) && !model.contains("gemini") {
         return ProviderKind::Anthropic;
+    }
+    if openai_compat::has_api_key("GEMINI_API_KEY") {
+        return ProviderKind::Gemini;
     }
     if openai_compat::has_api_key("OPENAI_API_KEY") {
         return ProviderKind::OpenAi;
@@ -186,7 +225,7 @@ pub fn detect_provider_kind(model: &str) -> ProviderKind {
     if openai_compat::has_api_key("XAI_API_KEY") {
         return ProviderKind::Xai;
     }
-    ProviderKind::Anthropic
+    ProviderKind::Gemini
 }
 
 #[must_use]
@@ -219,6 +258,14 @@ pub fn model_token_limit(model: &str) -> Option<ModelTokenLimit> {
         "grok-3" | "grok-3-mini" => Some(ModelTokenLimit {
             max_output_tokens: 64_000,
             context_window_tokens: 131_072,
+        }),
+        "gemini-1.5-flash" => Some(ModelTokenLimit {
+            max_output_tokens: 8192,
+            context_window_tokens: 1_048_576,
+        }),
+        "gemini-2.0-flash" => Some(ModelTokenLimit {
+            max_output_tokens: 8192,
+            context_window_tokens: 1_048_576,
         }),
         _ => None,
     }

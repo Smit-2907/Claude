@@ -470,7 +470,8 @@ fn base_cache_root() -> PathBuf {
             .join("cache")
             .join("prompt-cache");
     }
-    if let Some(home) = std::env::var_os("HOME") {
+    let home = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE"));
+    if let Some(home) = home {
         return PathBuf::from(home)
             .join(".claude")
             .join("cache")

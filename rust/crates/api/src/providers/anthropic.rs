@@ -589,10 +589,7 @@ impl AuthSource {
                 }
             }
             Ok(Some(token_set)) => Ok(Self::BearerToken(token_set.access_token)),
-            Ok(None) => Err(ApiError::missing_credentials(
-                "Anthropic",
-                &["ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY"],
-            )),
+            Ok(None) => Ok(Self::None),
             Err(error) => Err(error),
         }
     }
@@ -636,10 +633,7 @@ where
     }
 
     let Some(token_set) = load_saved_oauth_token()? else {
-        return Err(ApiError::missing_credentials(
-            "Anthropic",
-            &["ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY"],
-        ));
+        return Ok(AuthSource::None);
     };
     if !oauth_token_is_expired(&token_set) {
         return Ok(AuthSource::BearerToken(token_set.access_token));

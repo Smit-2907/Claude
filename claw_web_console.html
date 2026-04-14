@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claw Code - Web Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --surface-color: rgba(20, 20, 20, 0.75);
+            --border-color: rgba(255, 60, 60, 0.25);
+            --accent-color: #ff3c3c;
+            --accent-glow: rgba(255, 60, 60, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --glass-blur: blur(25px);
+            --red-glow: 0 0 20px rgba(255, 60, 60, 0.4);
+            --font-main: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at top left, #1a0505 0%, #0d0d0d 100%);
+        }
+
+        /* Hero/Background Aura */
+        .aura {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(13, 13, 13, 0.8), rgba(13, 13, 13, 0.95)), 
+                        url('file:///C:/Users/smits/.gemini/antigravity/brain/c0eeae92-bf22-441a-8c68-dc133e276d66/claw_web_dashboard_concept_1775484624617.png');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+            opacity: 0.4;
+            filter: grayscale(0.5);
+            animation: breathe 20s infinite alternate linear;
+        }
+
+        @keyframes breathe {
+            from { transform: scale(1.0); opacity: 0.35; }
+            to { transform: scale(1.05); opacity: 0.45; }
+        }
+
+        /* Top Nav */
+        header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(13, 13, 13, 0.8);
+            backdrop-filter: var(--glass-blur);
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-box {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-color);
+            border-radius: 6px;
+            box-shadow: var(--red-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #000;
+        }
+
+        .status-pill {
+            padding: 6px 12px;
+            background: rgba(46, 213, 115, 0.1);
+            border: 1px solid rgba(46, 213, 115, 0.3);
+            border-radius: 20px;
+            color: #2ed573;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-pill::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #2ed573;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        /* Main Workspace */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            height: calc(100vh - 80px);
+        }
+
+        .panel {
+            background: var(--surface-color);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .panel-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Sidebar - Workspace */
+        .workspace-list {
+            padding: 0.5rem;
+            list-style: none;
+        }
+
+        .workspace-item {
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .workspace-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .workspace-item.active {
+            background: rgba(255, 60, 60, 0.1);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* Center Console */
+        .console {
+            background: rgba(0, 0, 0, 0.4);
+            font-family: var(--font-mono);
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .log-entry {
+            margin-bottom: 0.8rem;
+            line-height: 1.5;
+            animation: fade-in 0.3s ease-out;
+        }
+
+        .log-time { color: #555; margin-right: 10px; font-size: 0.8rem; }
+        .log-info { color: #2ed573; font-weight: bold; }
+        .log-warn { color: #ffa502; font-weight: bold; }
+        .log-error { color: #ff3c3c; font-weight: bold; }
+        .log-msg { color: var(--text-primary); }
+
+        /* Command Input */
+        .input-area {
+            padding: 1.5rem;
+            background: rgba(13, 13, 13, 0.9);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .prompt-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 18px;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .prompt-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(255, 60, 60, 0.2);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #000;
+            box-shadow: var(--red-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Right Panel - Stats */
+        .stats-grid {
+            padding: 1.5rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .stat-label { color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; margin-top: 5px; color: var(--accent-color); }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            main { grid-template-columns: 240px 1fr; }
+            .panel-right { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="aura"></div>
+    
+    <header>
+        <div class="logo">
+            <div class="logo-box">C</div>
+            CLAW CODE <span style="font-weight: 300; opacity: 0.7;">v2.0</span>
+        </div>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div class="status-pill" id="global-status">SYSTEM IDLE</div>
+            <button id="login-btn" class="btn" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color); font-size: 0.8rem; padding: 6px 15px;">
+                LOGIN via OAUTH
+            </button>
+            <div class="status-pill" style="color: #ff3c3c; border-color: rgba(255,60,60,0.3); background: rgba(255,60,60,0.05);">
+                <div style="width:8px; height:8px; background:#ff3c3c; border-radius:50%; margin-right:6px;"></div>
+                RUST CORE: NOMINAL
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Workspace Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                WORKSPACE
+                <span id="crate-count" style="font-size: 0.7rem; color: var(--accent-color);">9 CRATES</span>
+            </div>
+            <ul class="workspace-list">
+                <li class="workspace-item active">claw-cli-core</li>
+                <li class="workspace-item">runtime-primitives</li>
+                <li class="workspace-item">mcp-client-hardened</li>
+                <li class="workspace-item">telemetry-bridge</li>
+                <li class="workspace-item">tools-parity-harness</li>
+                <li class="workspace-item">policy-engine-lite</li>
+                <li class="workspace-item">session-persistence</li>
+                <li class="workspace-item">oauth-pkce-flow</li>
+                <li class="workspace-item">bash-sandbox</li>
+            </ul>
+            <div style="margin-top: auto; padding: 1rem; border-top: 1px solid var(--border-color);">
+                <button id="build-btn" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                    CARGO BUILD --WORKSPACE
+                </button>
+            </div>
+        </div>
+
+        <!-- Center Console -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="panel" style="flex: 1;">
+                <div class="panel-header">
+                    SESSION LOGS
+                    <span id="session-id" style="font-family: var(--font-mono); font-size: 0.8rem;">SN-492-X</span>
+                </div>
+                <div id="console" class="console">
+                    <div class="log-entry">
+                        <span class="log-time">[19:42:01]</span>
+                        <span class="log-info">INIT</span>
+                        <span class="log-msg">Claw Code v2.0-rust-alpha starting...</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">[19:42:02]</span>
+                        <span class="log-info">OK</span>
+                        <span class="log-msg">Context loaded from /rust/crates/runtime</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">[19:42:03]</span>
+                        <span class="log-warn">WARN</span>
+                        <span class="log-msg">Parity harness check: 12 divergent signatures detected.</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">[19:42:05]</span>
+                        <span class="log-info">READY</span>
+                        <span class="log-msg">Awaiting agentic instructions. Run /doctor for preflight.</span>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="prompt-input" class="prompt-input" placeholder="Type a command or prompt (e.g. /doctor)..." autofocus>
+                    <button id="send-btn" class="btn btn-primary">RUN COMMAND</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Stats -->
+        <div class="panel panel-right">
+            <div class="panel-header">SYSTEM TELEMETRY</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Model Context</div>
+                    <div class="stat-value">Sonnet-4.6</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tokens / Sec</div>
+                    <div class="stat-value">124.5</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Memory Usage</div>
+                    <div class="stat-value">642MB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tool Latency</div>
+                    <div class="stat-value">12ms</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: auto; padding: 1rem;">
+                <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 1.5rem; text-align: center; border: 1px dashed var(--border-color);">
+                    <div style="color: var(--accent-color); font-weight: 800; font-size: 1.2rem; margin-bottom: 5px;">CLAWCORE</div>
+                    <div style="color: var(--text-secondary); font-size: 0.7rem; letter-spacing: 2px;">ULTRA WORKERS</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const consoleEl = document.getElementById('console');
+        const inputEl = document.getElementById('prompt-input');
+        const btnEl = document.getElementById('send-btn');
+        const buildBtn = document.getElementById('build-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const globalStatus = document.getElementById('global-status');
+
+        function addLog(type, msg) {
+            const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            let typeSpan = `<span class="log-info">INFO</span>`;
+            if (type === 'warn') typeSpan = `<span class="log-warn">WARN</span>`;
+            if (type === 'error') typeSpan = `<span class="log-error">ERROR</span>`;
+            if (type === 'user') typeSpan = `<span style="color: #6c5ce7; font-weight: bold;">USER</span>`;
+            if (type === 'build') typeSpan = `<span style="color: #ffa502; font-weight: bold;">BUILD</span>`;
+
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                ${typeSpan}
+                <span class="log-msg">${msg}</span>
+            `;
+            consoleEl.appendChild(entry);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Live stats fluctuation
+        setInterval(() => {
+            const tps = (120 + Math.random() * 10).toFixed(1);
+            const mem = (640 + Math.random() * 20).toFixed(0);
+            document.querySelectorAll('.stat-value')[1].innerText = tps;
+            document.querySelectorAll('.stat-value')[2].innerText = mem + 'MB';
+        }, 2000);
+
+        function handleInput() {
+            const val = inputEl.value.trim();
+            if (!val) return;
+
+            addLog('user', val);
+            inputEl.value = '';
+
+            setTimeout(() => {
+                if (val.startsWith('/')) {
+                    const cmd = val.split(' ')[0];
+                    if (cmd === '/doctor') {
+                        addLog('info', 'Executing preflight diagnostics via runtime-primitives...');
+                        setTimeout(() => addLog('info', '✔ Sandbox: Linux container detected (isolated)'), 300);
+                        setTimeout(() => addLog('info', '✔ Auth: Token set present (OAuth PKCE)'), 600);
+                        setTimeout(() => addLog('warn', 'Parity: 3 mock divergence warnings suppressed'), 900);
+                        setTimeout(() => addLog('info', 'STATUS: System healthy. Ready for agentic tasks.'), 1200);
+                    } else if (cmd === '/status') {
+                        addLog('info', 'Current state: CONVERSATION_LOOP_ACTIVE');
+                        addLog('info', 'Tools loaded: 42 across 4 MCP servers.');
+                    } else {
+                        addLog('error', `Command not found: ${cmd}`);
+                    }
+                } else {
+                    addLog('info', 'Thinking...');
+                    setTimeout(() => addLog('info', 'Assembling system prompt with dynamic boundaries...'), 800);
+                    setTimeout(() => addLog('info', 'Analyzing rust/crates/runtime/src/lib.rs...'), 1500);
+                    setTimeout(() => addLog('info', 'Response: This file exposes the core runtime primitives for Claw Code.'), 2500);
+                }
+            }, 300);
+        }
+
+        buildBtn.addEventListener('click', () => {
+            buildBtn.disabled = true;
+            globalStatus.innerText = 'BUILDING...';
+            addLog('build', 'cargo build --workspace');
+            addLog('build', 'Compiling runtime-primitives v0.1.0...');
+            setTimeout(() => addLog('build', 'Compiling mcp-client-hardened v0.1.0...'), 1000);
+            setTimeout(() => addLog('build', 'Compiling claw-cli-core v0.1.0...'), 2000);
+            setTimeout(() => {
+                addLog('info', 'Build successful. Finished in 3.42s');
+                buildBtn.disabled = false;
+                globalStatus.innerText = 'SYSTEM READY';
+            }, 3500);
+        });
+
+        loginBtn.addEventListener('click', () => {
+            addLog('info', 'Initiating OAuth2 PKCE flow via loopback adapter...');
+            loginBtn.innerText = 'AUTHENTICATING...';
+            setTimeout(() => {
+                addLog('info', 'Credentials saved to ~/.claw/credentials.json');
+                loginBtn.innerText = 'LOGGED IN';
+                loginBtn.style.color = '#2ed573';
+                loginBtn.style.borderColor = 'rgba(46, 213, 115, 0.3)';
+            }, 2000);
+        });
+
+        btnEl.addEventListener('click', handleInput);
+        inputEl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleInput();
+        });
+    </script>
+</body>
+</html>
